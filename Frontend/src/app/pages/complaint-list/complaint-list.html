@@ -1,0 +1,550 @@
+<div class="row g-2 m-1 px-3 text-center">
+  <div class="col">
+    <div
+      class="summary-box p-3 rounded bg-dark-subtle"
+      (click)="filterByStatus(null)"
+      [class.active]="selectedStatusId === null"
+    >
+      <small class="fw-semibold">All</small>
+      <h5 class="mb-0 fw-bold">{{ allComplaints.length }}</h5>
+    </div>
+  </div>
+
+  <div class="col">
+    <div
+      class="summary-box p-3 rounded bg-dark-subtle"
+      (click)="filterByStatus(1)"
+      [class.active]="selectedStatusId === 1"
+    >
+      <small class="fw-semibold">Generated</small>
+      <h5 class="mb-0 fw-bold">{{ totalGenerated }}</h5>
+    </div>
+  </div>
+
+  <div class="col">
+    <div
+      class="summary-box p-3 rounded bg-dark-subtle"
+      (click)="filterByStatus(2)"
+      [class.active]="selectedStatusId === 2"
+    >
+      <small class="fw-semibold">Acknowledged</small>
+      <h5 class="mb-0 fw-bold">{{ totalAcknowledged }}</h5>
+    </div>
+  </div>
+
+  <div class="col">
+    <div
+      class="summary-box p-3 rounded bg-dark-subtle"
+      (click)="filterByStatus(3)"
+      [class.active]="selectedStatusId === 3"
+    >
+      <small class="fw-semibold">Ticket Generated</small>
+      <h5 class="mb-0 fw-bold">{{ totalTicketGenerated }}</h5>
+    </div>
+  </div>
+
+  <div class="col">
+    <div
+      class="summary-box p-3 rounded bg-dark-subtle"
+      (click)="filterByStatus(5)"
+      [class.active]="selectedStatusId === 5"
+    >
+      <small class="fw-semibold">Allocated</small>
+      <h5 class="mb-0 fw-bold">{{ totalAllocated }}</h5>
+    </div>
+  </div>
+
+  <div class="col">
+    <div
+      class="summary-box p-3 rounded bg-dark-subtle"
+      (click)="filterByStatus(4)"
+      [class.active]="selectedStatusId === 4"
+    >
+      <small class="fw-semibold">Assigned</small>
+      <h5 class="mb-0 fw-bold">{{ totalAssigned }}</h5>
+    </div>
+  </div>
+
+  <div class="col">
+    <div
+      class="summary-box p-3 rounded bg-dark-subtle"
+      (click)="filterByStatus(6)"
+      [class.active]="selectedStatusId === 6"
+    >
+      <small class="fw-semibold">Resolved</small>
+      <h5 class="mb-0 fw-bold">{{ totalResolved }}</h5>
+    </div>
+  </div>
+
+  <div class="col">
+    <div
+      class="summary-box p-3 rounded bg-dark-subtle"
+      (click)="filterByStatus(7)"
+      [class.active]="selectedStatusId === 7"
+    >
+      <small class="fw-semibold">Closed</small>
+      <h5 class="mb-0 fw-bold">{{ totalClosed }}</h5>
+    </div>
+  </div>
+</div>
+
+<!-- table -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+  <div class="toast align-items-center text-bg-success border-0" role="alert" #successToast>
+    <div class="d-flex">
+      <div class="toast-body">✅ Complaint submitted successfully!</div>
+      <button
+        type="button"
+        class="btn-close btn-close-white me-2 m-auto"
+        data-bs-dismiss="toast"
+      ></button>
+    </div>
+  </div>
+</div>
+<div class="container-fluid mt-1 px-4">
+  <div class="card shadow complaint-card">
+    <div
+      class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+      style="min-height: 65px"
+    >
+      <h5 class="mb-0" style="font-size: 25px">Complaint List 📝</h5>
+
+      <div class="p-3">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="🔍 Search by UID, Comp Details, Subject, System..."
+          [(ngModel)]="searchText"
+          (input)="applyFilters()"
+          style="width: 400px"
+        />
+      </div>
+      <!-- ROLE BADGE -->
+
+      <div class="d-flex gap-3">
+        <span class="badge border bg-white role-badge" [ngClass]="'role-admin'">
+          👤{{ auth.isAdmin() ? 'Admin' : 'User' }}
+        </span>
+
+        <button class="badge text-dark bg-white border">Total: {{ complaints.length || 0 }}</button>
+
+        <button *ngIf="auth.isUser()" class="btn btn-light" (click)="openAddModal()">
+          + Add Complaint
+        </button>
+        <button class="btn btn-success btn-sm" (click)="exportToPDF()">
+          <i class="bi bi-file-earmark-pdf"></i> Export PDF
+        </button>
+        <button class="btn btn-danger btn-sm" (click)="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive table-sticky-wrapper">
+        <table class="table table-striped table-bordered table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Complaint UID</th>
+              <th>Farmer ID</th>
+              <th>District Id</th>
+              <th>Subject</th>
+              <th>System Type</th>
+              <th>Complain Details</th>
+              <th>Complaint Status</th>
+              <th>Allocated Dept_Id</th>
+              <th>Assigned User</th>
+              <th>Comp_Generated Date</th>
+              <th>Created At</th>
+              @if (auth.isAdmin()) {
+                <th>Status Details</th>
+                <th>Acknowledge</th>
+                <th>Generate Ticket</th>
+                <th>Allocation</th>
+                <th>Assign</th>
+                <th>Resolve</th>
+                <th>Close</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of paginatedComplaints">
+              <td>{{ c.id }}</td>
+              <td>{{ c.complaintUId }}</td>
+              <td>{{ c.farmerId }}</td>
+              <td>{{ c.districtId }}</td>
+              <td>{{ c.subject || '-' }}</td>
+              <td>{{ c.systemType }}</td>
+              <td>{{ c.compDetails }}</td>
+              <td style="font-weight: 600">{{ c.complaintStatus }}</td>
+              <td>{{ getCompanyName(c.allocDeptId) }}</td>
+              <td>{{ c.assignedUser || '-' }}</td>
+              <td>{{ c.compGeneratedDate }}</td>
+              <td>{{ c.createdOn }}</td>
+              @if (auth.isAdmin()) {
+                 <!-- SHOW STATUS HISTORY -->
+                <td class="text-center">
+                  <button class="btn btn-sm btn-outline-primary" (click)="viewDetails(c)">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </td>
+
+                <!-- ACKNOWLEDGE -->
+                <td>
+                  <input
+                    type="checkbox"
+                    [checked]="c.compStatusId >= 2"
+                    [disabled]="c.compStatusId !== 1"
+                    (click)="acknowledge(c, $event)"
+                  />
+                </td>
+
+                <!-- GENERATE TICKET -->
+                <td>
+                  <button
+                    class="btn btn-sm btn-info"
+                    (click)="generateTicket(c)"
+                    [disabled]="c.compStatusId !== 2"
+                  >
+                    Generate
+                  </button>
+                </td>
+
+                <!-- ALLOCATION -->
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <select
+                      class="form-select form-select-sm"
+                      style="width: auto"
+                      [(ngModel)]="c.selectedCompany"
+                      [disabled]="c.compStatusId !== 3"
+                    >
+                      <option value="">Select</option>
+                      <option *ngFor="let comp of companies" [value]="comp.id">
+                        {{ comp.name }}
+                      </option>
+                    </select>
+
+                    <button
+                      class="btn btn-sm btn-primary"
+                      (click)="allocate(c)"
+                      [disabled]="c.compStatusId !== 3 || !c.selectedCompany"
+                    >
+                      Allocate
+                    </button>
+                  </div>
+                </td>
+
+                <!-- ASSIGN -->
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <select
+                      class="form-select form-select-sm"
+                      style="width: auto"
+                      [(ngModel)]="c.selectedUser"
+                      [disabled]="c.compStatusId !== 5"
+                    >
+                      <option value="">Select</option>
+                      <option *ngFor="let u of users" [value]="u">{{ u }}</option>
+                    </select>
+
+                    <button
+                      class="btn btn-sm btn-success"
+                      (click)="assign(c)"
+                      [disabled]="c.compStatusId !== 5 || !c.selectedUser"
+                    >
+                      Assign
+                    </button>
+                  </div>
+                </td>
+
+                <!-- RESOLVE FILE -->
+                <td style="min-width: 250px">
+                  <div class="d-flex flex-column gap-1">
+                    <!-- File -->
+                    <input
+                      type="file"
+                      class="form-control form-control-sm"
+                      (change)="onResolveFileSelected($event)"
+                      [disabled]="c.compStatusId !== 4"
+                    />
+
+                    <!-- Remarks + Button in same row -->
+                    <div class="d-flex gap-1 mt-2">
+                      <input
+                        type="text"
+                        class="form-control form-control-sm"
+                        placeholder="Resolve remarks"
+                        [(ngModel)]="c.resolveRemarks"
+                        [disabled]="c.compStatusId !== 4"
+                      />
+
+                      <button
+                        class="btn btn-sm btn-warning"
+                        (click)="resolve(c)"
+                        [disabled]="c.compStatusId !== 4"
+                      >
+                        Resolve
+                      </button>
+
+                      <!-- ✅ Download Icon -->
+                      <button
+                        class="btn btn-sm btn-outline-secondary"
+                        (click)="downloadFile(c.id, 'resolve')"
+                      >
+                        <i class="bi bi-download"></i>
+                      </button>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- CLOSE FILE -->
+                <td style="min-width: 250px">
+                  <div class="d-flex flex-column gap-1">
+                    <!-- File -->
+                    <input
+                      type="file"
+                      class="form-control form-control-sm"
+                      (change)="onCloseFileSelected($event)"
+                      [disabled]="c.compStatusId !== 6"
+                    />
+
+                    <!-- Remarks + Button in same row -->
+                    <div class="d-flex gap-1 mt-2">
+                      <input
+                        type="text"
+                        class="form-control form-control-sm"
+                        placeholder="Closing remarks"
+                        [(ngModel)]="c.closeRemarks"
+                        [disabled]="c.compStatusId !== 6"
+                      />
+
+                      <button
+                        class="btn btn-sm btn-danger"
+                        (click)="close(c)"
+                        [disabled]="c.compStatusId !== 6"
+                      >
+                        Close
+                      </button>
+                      <!-- ✅ Download Icon -->
+                      <button
+                        class="btn btn-sm btn-outline-secondary"
+                        (click)="downloadFile(c.id, 'close')"
+                      >
+                        <i class="bi bi-download"></i>
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              }
+            </tr>
+            <!-- NO DATA ROW -->
+            <tr *ngIf="paginatedComplaints.length === 0">
+              <td colspan="19" class="no-data-cell text-center">📭 No complaints found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- for pagination -->
+      <div class="d-flex justify-content-between align-items-center p-3">
+        <button
+          class="btn btn-sm btn-light border-dark"
+          (click)="currentPage = currentPage - 1"
+          [disabled]="currentPage === 1"
+        >
+          <b>⏮️ Previous</b>
+        </button>
+
+        <span> Page {{ currentPage }} of {{ totalPages }} (10 Records Per Page) </span>
+        <button
+          class="btn btn-sm btn-light border-dark"
+          (click)="currentPage = currentPage + 1"
+          [disabled]="currentPage === totalPages"
+        >
+          <b>Next ⏭️</b>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Complaint Modal -->
+<div class="modal fade" id="addComplaintModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Complaint</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+
+      <div class="modal-body">
+        <form #f="ngForm" novalidate (ngSubmit)="saveComplaint(f)">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label>Farmer ID <span class="text-danger">*</span></label>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newComplaint.farmerId"
+                name="farmerId"
+                required
+              />
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label>Application ID <span class="text-danger">*</span></label>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newComplaint.applicationId"
+                name="applicationId"
+                required
+              />
+            </div>
+
+            <!-- SYSTEM DROPDOWN -->
+            <div class="col-md-6 mb-3">
+              <label>System Type <span class="text-danger">*</span></label>
+
+              <select
+                class="form-control"
+                [(ngModel)]="newComplaint.systemTypeId"
+                (change)="onSystemChange(newComplaint.systemTypeId)"
+                name="systemTypeId"
+                required
+              >
+                <option [ngValue]="null">Select System Type</option>
+
+                <option *ngFor="let s of systemTypes" [value]="s.id">
+                  {{ s.systemName }}
+                </option>
+              </select>
+            </div>
+
+            <!-- SUBJECT DROPDOWN -->
+            <div class="col-md-6 mb-3">
+              <label>Complaint Subject <span class="text-danger">*</span></label>
+
+              <select
+                class="form-control"
+                [(ngModel)]="newComplaint.compSubjectId"
+                name="compSubjectId"
+                required
+              >
+                <option [ngValue]="null">Select Subject</option>
+
+                <option *ngFor="let s of subjects" [value]="s.id">
+                  {{ s.subjectName }}
+                </option>
+              </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label>Alloc Sub Nock ID <span class="text-danger">*</span></label>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newComplaint.allocSubNockId"
+                name="allocSubNockId"
+                required
+              />
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label>District ID <span class="text-danger">*</span></label>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newComplaint.districtId"
+                name="districtId"
+                required
+              />
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label>Device ID</label>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="newComplaint.deviceId"
+                name="DeviceId"
+                required
+              />
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label>Complaint Generated Date 📅<span class="text-danger">*</span></label>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="newComplaint.compGeneratedDate"
+                name="compGeneratedDate"
+                required
+              />
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label>Complain Details</label>
+              <textarea
+                type="text"
+                class="form-control"
+                [(ngModel)]="newComplaint.compDetails"
+                name="compDetails"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-success" [disabled]="f.invalid">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔥 Professional Status History Modal -->
+<div class="modal fade" id="statusHistoryModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content shadow">
+      <!-- Header -->
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Complaint #{{ selectedComplaintId }} - Status Timeline</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <div class="timeline">
+          <div *ngFor="let item of statusHistory; let i = index" class="timeline-item">
+            <div
+              class="timeline-dot"
+              [ngClass]="{
+                'bg-primary': item.statusId === 1,
+                'bg-info': item.statusId === 2,
+                'bg-secondary': item.statusId === 3,
+                'bg-warning': item.statusId === 5,
+                'bg-success': item.statusId === 4,
+                'bg-dark': item.statusId === 6,
+                'bg-danger': item.statusId === 7,
+              }"
+            ></div>
+
+            <div class="timeline-content">
+              <div class="fw-semibold">
+                {{ item.statusName }}
+              </div>
+              <small class="text-muted">
+                {{ item.lmo | date: 'dd-MM-yyyy HH:mm:ss' }}
+              </small>
+            </div>
+          </div>
+
+          <div *ngIf="statusHistory.length === 0" class="text-center text-muted">
+            No history available
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

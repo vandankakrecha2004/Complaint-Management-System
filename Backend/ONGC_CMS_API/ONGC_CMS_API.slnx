@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Business/Business.csproj" />
+  <Project Path="DataProvider.MySQL/DataProvider.MySQL.csproj" />
+  <Project Path="IDataProvider.MySQL/IDataProvider.MySQL.csproj" />
+  <Project Path="Model/Model.csproj" />
+  <Project Path="ONGC_CMS_API/ONGC_CMS_API.csproj" />
+</Solution>
